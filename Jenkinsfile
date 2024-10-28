@@ -1,59 +1,48 @@
 pipeline {
+    environment {
+        IMAGEN = "fedecanesa/mi-imagen-docker"  // Reemplaza con tu repositorio
+        DOCKER_CREDENTIALS_ID = 'ID_CREDENCIALES_JENKINS'  // Reemplaza con el ID que usaste para las credenciales en Jenkins
+    }
     agent any
     stages {
-
-        stage('Declarative: Checkout SCM') {
-            steps {
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[
-                        url: 'git@github.com:fedecanesa/docker-jenkins.git',
-                        credentialsId: 'dockerhub-credentials-id'
-                    ]]
-                ])
-            }
-        }
-        
-        stage('Debug Docker Installation') {
+        stage('Clone') {
             steps {
                 script {
-                    // Comando de debug para verificar si Docker está instalado y accesible
-                    sh 'docker --version || echo "Docker no está disponible"'
-                    sh 'docker info || echo "No se puede acceder a Docker"'
+                    git branch: "main", url: 'https://github.com/fedecanesa/docker-jenkins.git'  // Cambia al repositorio que deseas clonar
                 }
             }
         }
-        
-        stage('Build Docker Image') {
+        stage('Build') {
             steps {
                 script {
-                    dockerImage = docker.build("fedecanesa/mi-imagen:${BUILD_NUMBER}")
+                    newApp = docker.build "${env.IMAGEN}:${env.BUILD_NUMBER}"
                 }
             }
         }
-        
-        stage('Run Docker Container') {
+        stage('Test') {
             steps {
                 script {
-                    // Aquí colocamos el ajuste para correr el contenedor
-                    sh "docker run -d --entrypoint='/bin/sh' fedecanesa/mi-imagen:${BUILD_NUMBER} -c 'tail -f /dev/null'"
+                    docker.image("${env.IMAGEN}:${env.BUILD_NUMBER}").inside('-u root') {
+                        sh 'apache2ctl -v'  // Cambia este comando si necesitas ejecutar otros tests
+                    }
                 }
             }
         }
-        
-        stage('Verificar contenedor') {
+        stage('Deploy') {
             steps {
-                // Aquí puedes agregar la lógica para verificar el contenedor
-                sh "docker ps -q"
+                script {
+                    docker.withRegistry('', env.DOCKER_CREDENTIALS_ID) {
+                        newApp.push()
+                    }
+                }
             }
         }
-    }
-    
-    post {
-        always {
-            // Opcional: Limpieza de imágenes, pero sin eliminar el contenedor
-            sh "docker rmi -f fedecanesa/mi-imagen:${BUILD_NUMBER} || true"
+        stage('Clean Up') {
+            steps {
+                script {
+                    sh "docker rmi ${env.IMAGEN}:${env.BUILD_NUMBER}"
+                }
+            }
         }
     }
 }
