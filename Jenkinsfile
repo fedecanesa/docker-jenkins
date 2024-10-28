@@ -1,56 +1,56 @@
 pipeline {
     environment {
-        IMAGEN = "fedecanesa/mi-imagen"  // Nombre del repositorio en DockerHub
-        DOCKER_CREDENTIALS_ID = 'ID_CREDENCIALES_JENKINS'  // Credenciales creadas en Jenkins
+        IMAGEN = "fedecanesa/mi-imagen"  // DockerHub repository name
+        DOCKER_CREDENTIALS_ID = 'ID_CREDENCIALES_JENKINS'  // Jenkins credentials ID
     }
     agent any
     stages {
         stage('Clone') {
             steps {
                 script {
-                    echo "Clonando el repositorio desde GitHub..."
+                    echo "Cloning the repository from GitHub..."
                     git branch: "main", url: 'https://github.com/fedecanesa/docker-jenkins.git'
-                    echo "Repositorio clonado exitosamente."
+                    echo "Repository successfully cloned."
                 }
             }
         }
         stage('Build') {
             steps {
                 script {
-                    echo "Iniciando construcción de la imagen Docker..."
+                    echo "Starting Docker image build..."
                     newApp = docker.build("${env.IMAGEN}:${env.BUILD_NUMBER}")
-                    echo "Imagen Docker construida con etiqueta: ${env.IMAGEN}:${env.BUILD_NUMBER}"
+                    echo "Docker image built with tag: ${env.IMAGEN}:${env.BUILD_NUMBER}"
                 }
             }
         }
         stage('Test') {
             steps {
                 script {
-                    echo "Realizando pruebas en la imagen..."
+                    echo "Running tests on the Docker image..."
                     docker.image("${env.IMAGEN}:${env.BUILD_NUMBER}").inside('-u root') {
-                        sh 'echo "Prueba simulada: Ejecutando comandos de prueba en la imagen"'
+                        sh 'echo "Simulated Test: Running test commands in the image"'
                     }
-                    echo "Pruebas completadas."
+                    echo "Tests completed."
                 }
             }
         }
         stage('Deploy') {
             steps {
                 script {
-                    echo "Iniciando despliegue a Docker Hub..."
+                    echo "Starting deployment to Docker Hub..."
                     docker.withRegistry('', env.DOCKER_CREDENTIALS_ID) {
                         newApp.push()
                     }
-                    echo "Despliegue a Docker Hub completado con éxito."
+                    echo "Successfully deployed to Docker Hub."
                 }
             }
         }
         stage('Clean Up') {
             steps {
                 script {
-                    echo "Limpiando imagen local..."
+                    echo "Cleaning up local image..."
                     sh "docker rmi ${env.IMAGEN}:${env.BUILD_NUMBER} || true"
-                    echo "Imagen local eliminada."
+                    echo "Local image removed."
                 }
             }
         }
@@ -58,7 +58,7 @@ pipeline {
     post {
         always {
             script {
-                echo "Pipeline completado. Verifica los logs de cada etapa para más detalles."
+                echo "Pipeline completed. Check each stage's logs for details."
             }
         }
     }
