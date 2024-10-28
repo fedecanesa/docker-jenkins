@@ -1,6 +1,6 @@
 pipeline {
     environment {
-        IMAGEN = "fedecanesa/mi-imagen-docker"  // Reemplaza con tu repositorio
+        IMAGEN = "fedecanesa/mi-imagen"  // Reemplaza con tu repositorio
         DOCKER_CREDENTIALS_ID = 'ID_CREDENCIALES_JENKINS'  // Reemplaza con el ID que usaste para las credenciales en Jenkins
     }
     agent any
