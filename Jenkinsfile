@@ -6,6 +6,17 @@ pipeline {
                 checkout scm
             }
         }
+        
+        stage('Debug Docker Installation') {
+            steps {
+                script {
+                    // Comando de debug para verificar si Docker está instalado y accesible
+                    sh 'docker --version || echo "Docker no está disponible"'
+                    sh 'docker info || echo "No se puede acceder a Docker"'
+                }
+            }
+        }
+        
         stage('Build Docker Image') {
             steps {
                 script {
@@ -13,6 +24,7 @@ pipeline {
                 }
             }
         }
+        
         stage('Run Docker Container') {
             steps {
                 script {
@@ -21,15 +33,18 @@ pipeline {
                 }
             }
         }
+        
         stage('Verificar contenedor') {
             steps {
                 // Aquí puedes agregar la lógica para verificar el contenedor
-                sh "docker ps | grep fedecanesa/mi-imagen:${BUILD_NUMBER}"
+                sh "docker ps -q"
             }
         }
     }
+    
     post {
         always {
+            // Opcional: Limpieza de imágenes, pero sin eliminar el contenedor
             sh "docker rmi -f fedecanesa/mi-imagen:${BUILD_NUMBER} || true"
         }
     }
