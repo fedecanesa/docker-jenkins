@@ -24,14 +24,12 @@ pipeline {
         stage('Verificar contenedor') {
             steps {
                 // Aquí puedes agregar la lógica para verificar el contenedor
-                sh "docker ps -q"
+                sh "docker ps | grep fedecanesa/mi-imagen:${BUILD_NUMBER}"
             }
         }
     }
     post {
         always {
-            // Opcional: Limpieza de contenedores e imágenes
-            sh "docker rm -f \$(docker ps -a -q) || true"
             sh "docker rmi -f fedecanesa/mi-imagen:${BUILD_NUMBER} || true"
         }
     }
