@@ -8,14 +8,15 @@ pipeline {
                 }
             }
         }
-        stage('Run Docker Container') {
+       stage('Run Docker Container') {
             steps {
                 script {
                     def container = docker.image("fedecanesa/mi-imagen:${env.BUILD_ID}")
-                    env.CONTAINER_ID = container.run('-d').id
+                    env.CONTAINER_ID = container.run('-d --entrypoint tail -- -f /dev/null').id
                 }
             }
         }
+
         stage('Verificar contenedor') {
             steps {
                 script {
