@@ -11,8 +11,8 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    def containerID = docker.image("fedecanesa/mi-imagen:${env.BUILD_ID}").run('-d')
-                    env.CONTAINER_ID = containerID.trim()
+                    def container = docker.image("fedecanesa/mi-imagen:${env.BUILD_ID}")
+                    env.CONTAINER_ID = container.run('-d').id
                 }
             }
         }
@@ -44,7 +44,8 @@ pipeline {
     post {
         always {
             script {
-                sh "docker rm -f ${env.CONTAINER_ID}"
+                // Verifica que el contenedor existe antes de intentar eliminarlo
+                sh 'docker ps -q | grep -w ${CONTAINER_ID} && docker rm -f ${CONTAINER_ID} || echo "Contenedor no encontrado o ya eliminado."'
             }
         }
     }
