@@ -8,11 +8,11 @@ pipeline {
                 }
             }
         }
-       stage('Run Docker Container') {
-            steps {
-                script {
+      stage('Run Docker Container') {
+        steps {
+            script {
                     def container = docker.image("fedecanesa/mi-imagen:${env.BUILD_ID}")
-                    env.CONTAINER_ID = container.run('-d --entrypoint tail -- -f /dev/null').id
+                    env.CONTAINER_ID = container.run('--entrypoint tail -- -f /dev/null').id
                 }
             }
         }
