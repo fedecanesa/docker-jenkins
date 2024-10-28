@@ -1,9 +1,17 @@
 pipeline {
     agent any
     stages {
+
         stage('Declarative: Checkout SCM') {
             steps {
-                checkout scm
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'git@github.com:fedecanesa/docker-jenkins.git',
+                        credentialsId: 'dockerhub-credentials-id'
+                    ]]
+                ])
             }
         }
         
