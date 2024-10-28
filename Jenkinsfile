@@ -1,53 +1,38 @@
 pipeline {
     agent any
     stages {
+        stage('Declarative: Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("fedecanesa/mi-imagen:${env.BUILD_ID}")
+                    dockerImage = docker.build("fedecanesa/mi-imagen:${BUILD_NUMBER}")
                 }
             }
         }
-      stage('Run Docker Container') {
-        steps {
-            script {
-                    def container = docker.image("fedecanesa/mi-imagen:${env.BUILD_ID}")
-                    env.CONTAINER_ID = container.run('--entrypoint tail -- -f /dev/null').id
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    // Aquí colocamos el ajuste para correr el contenedor
+                    sh "docker run -d --entrypoint='/bin/sh' fedecanesa/mi-imagen:${BUILD_NUMBER} -c 'tail -f /dev/null'"
                 }
             }
         }
-
         stage('Verificar contenedor') {
             steps {
-                script {
-                    sh "docker exec ${env.CONTAINER_ID} ps aux"
-                }
-            }
-        }
-        stage('Capturar logs del contenedor') {
-            steps {
-                script {
-                    sh "docker logs ${env.CONTAINER_ID} > logs.txt"
-                    archiveArtifacts artifacts: 'logs.txt'
-                }
-            }
-        }
-        stage('Push Docker Image to Docker Hub') {
-            steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials-id') {
-                        docker.image("fedecanesa/mi-imagen:${env.BUILD_ID}").push()
-                    }
-                }
+                // Aquí puedes agregar la lógica para verificar el contenedor
+                sh "docker ps -q"
             }
         }
     }
     post {
         always {
-            script {
-                // Verifica que el contenedor existe antes de intentar eliminarlo
-                sh 'docker ps -q | grep -w ${CONTAINER_ID} && docker rm -f ${CONTAINER_ID} || echo "Contenedor no encontrado o ya eliminado."'
-            }
+            // Opcional: Limpieza de contenedores e imágenes
+            sh "docker rm -f \$(docker ps -a -q) || true"
+            sh "docker rmi -f fedecanesa/mi-imagen:${BUILD_NUMBER} || true"
         }
     }
 }
