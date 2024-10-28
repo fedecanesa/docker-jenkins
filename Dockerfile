@@ -1,14 +1,13 @@
-# Usamos una imagen base de Ubuntu
-FROM ubuntu:20.04
+FROM jenkins/jenkins:lts
 
-# Actualizamos el sistema y agregamos algunas herramientas básicas
-RUN apt-get update && apt-get install -y curl git
+USER root
+RUN apt-get update && \
+    apt-get install -y apt-transport-https ca-certificates curl software-properties-common && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
+    echo "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list && \
+    apt-get update && \
+    apt-get install -y docker-ce && \
+    usermod -aG docker jenkins
 
-# Establecemos el directorio de trabajo
-WORKDIR /app
+USER jenkins
 
-# Copiamos el contenido del repositorio en el contenedor
-COPY . .
-
-# Comando por defecto
-CMD ["bash"]
